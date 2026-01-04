@@ -190,8 +190,51 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories }) 
 
   return (
     <div className="space-y-6">
-      {/* Contribution Heatmap */}
-      <ContributionHeatmap goals={goals} />
+
+      {/* High Priority Tasks - Full Width at Top */}
+      <Card className="animate-slide-up">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Target className="h-5 w-5 text-destructive" />
+            High Priority Tasks
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats.highPriorityGoals.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {stats.highPriorityGoals.map((goal) => (
+                <div
+                  key={goal.id}
+                  className="flex items-center justify-between p-3 bg-destructive/10 border border-destructive/20 rounded-lg hover:bg-destructive/15 transition-colors cursor-pointer group h-full"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground truncate group-hover:text-destructive transition-colors">
+                      {goal.title}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="bg-background text-xs">
+                        {getCategoryName(goal.categoryId)}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {goal.type}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ArrowUpRight className="h-4 w-4 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-[100px] flex flex-col items-center justify-center text-muted-foreground text-center p-4">
+              <CheckCircle2 className="h-8 w-8 mb-2 opacity-50" />
+              <p>No high priority tasks pending!</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="animate-fade-in">
           <CardContent className="pt-6">
@@ -254,55 +297,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories }) 
         </Card>
       </div>
 
-      {/* High Priority Tasks & Yearly Progress */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* High Priority Tasks */}
-        <Card className="animate-slide-up">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Target className="h-5 w-5 text-destructive" />
-              High Priority Tasks
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.highPriorityGoals.length > 0 ? (
-              <div className="space-y-4">
-                {stats.highPriorityGoals.map((goal) => (
-                  <div
-                    key={goal.id}
-                    className="flex items-center justify-between p-3 bg-destructive/10 border border-destructive/20 rounded-lg hover:bg-destructive/15 transition-colors cursor-pointer group"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate group-hover:text-destructive transition-colors">
-                        {goal.title}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="bg-background text-xs">
-                          {getCategoryName(goal.categoryId)}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {goal.type}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {/* You can add actions here if needed */}
-                      <ArrowUpRight className="h-4 w-4 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground text-center p-4">
-                <CheckCircle2 className="h-8 w-8 mb-2 opacity-50" />
-                <p>No high priority tasks pending!</p>
-                <p className="text-sm opacity-70">Great job staying on top of things.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Yearly Goal Chart */}
+      {/* Yearly Progress */}
+      <div className="w-full">
         <Card className="animate-slide-up" style={{ animationDelay: '100ms' }}>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -467,83 +463,55 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories }) 
         </Card>
       </div>
 
-      {/* Category Distribution & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Category Bar Chart */}
-        <Card className="animate-slide-up">
-          <CardHeader>
-            <CardTitle className="text-lg">Goals by Category</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {categoryChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={categoryChartData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={80} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Bar dataKey="goals" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                No categories with goals
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Recent Activity */}
-        <Card className="animate-slide-up" style={{ animationDelay: '100ms' }}>
-          <CardHeader>
-            <CardTitle className="text-lg">Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.recentActivity.length > 0 ? (
-              <div className="space-y-4">
-                {stats.recentActivity.map((goal) => (
-                  <div
-                    key={goal.id}
-                    className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{goal.title}</p>
-                      <p className="text-sm text-muted-foreground">{getCategoryName(goal.categoryId)}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className={
-                          goal.status === 'done'
-                            ? 'bg-status-done-bg text-status-done'
-                            : goal.status === 'working'
-                              ? 'bg-status-working-bg text-status-working'
-                              : 'bg-status-pending-bg text-status-pending'
-                        }
-                      >
-                        {goal.status}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDate(goal.updatedAt)}
-                      </span>
-                    </div>
+
+      {/* Contribution Heatmap */}
+      <ContributionHeatmap goals={goals} />
+
+      {/* Recent Activity */}
+      <Card className="animate-slide-up" style={{ animationDelay: '100ms' }}>
+        <CardHeader>
+          <CardTitle className="text-lg">Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats.recentActivity.length > 0 ? (
+            <div className="space-y-4">
+              {stats.recentActivity.map((goal) => (
+                <div
+                  key={goal.id}
+                  className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground truncate">{goal.title}</p>
+                    <p className="text-sm text-muted-foreground">{getCategoryName(goal.categoryId)}</p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-                No recent activity
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={
+                        goal.status === 'done'
+                          ? 'bg-status-done-bg text-status-done'
+                          : goal.status === 'working'
+                            ? 'bg-status-working-bg text-status-working'
+                            : 'bg-status-pending-bg text-status-pending'
+                      }
+                    >
+                      {goal.status}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatDate(goal.updatedAt)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+              No recent activity
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div >
   );
 };
