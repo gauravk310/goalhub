@@ -17,7 +17,8 @@ import {
     Settings,
     Pencil,
     Trash2,
-    RotateCcw
+    RotateCcw,
+    Loader2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -91,7 +92,9 @@ export default function GoalDetailPage() {
         status: 'pending' as GoalStatus,
     });
     const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
+    const [isMarkingComplete, setIsMarkingComplete] = useState(false);
     const [isReworkDialogOpen, setIsReworkDialogOpen] = useState(false);
+    const [isReworking, setIsReworking] = useState(false);
     const [submittingEdit, setSubmittingEdit] = useState(false);
 
     // ... useEffect ...
@@ -101,10 +104,13 @@ export default function GoalDetailPage() {
     const confirmRework = async () => {
         if (!goal || !session?.token) return;
 
+        setIsReworking(true);
         const previousStatus = goal.status;
         setGoal({ ...goal, status: 'working' });
         setEditFormData(prev => ({ ...prev, status: 'working' }));
-        setIsReworkDialogOpen(false);
+        // Don't close immediately to show state change if needed, but for UX usually close after success
+        // or keep open with loader. Let's keep open with loader until success?
+        // Actually, user wants "loader everywhere".
 
         try {
             const res = await fetch(`/api/goals/${id}`, {
@@ -121,11 +127,82 @@ export default function GoalDetailPage() {
                 toast.error('Failed to update status');
             } else {
                 toast.success('Goal reopened for work!');
+                setIsReworkDialogOpen(false); // Close on success
             }
         } catch (error) {
             setGoal({ ...goal, status: previousStatus });
             setEditFormData(prev => ({ ...prev, status: previousStatus }));
             toast.error('Failed to update status');
+        } finally {
+            setIsReworking(false);
+        }
+    };
+
+    const handleAddProgress = async () => {
+        if (!newProgressTitle.trim() || !session?.token) return;
+        setSubmittingProgress(true);
+        try {
+            const res = await fetch(`/api/goals/${id}/progress`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.token}`
+                },
+                body: JSON.stringify({
+                    title: newProgressTitle,
+                    description: newProgressDesc
+                })
+            });
+
+            if (res.ok) {
+                const newProgress = await res.json();
+                setProgressList([newProgress, ...progressList]);
+                setNewProgressTitle('');
+                setNewProgressDesc('');
+                setIsAddingProgress(false);
+                toast.success('Progress added!');
+            } else {
+                toast.error('Failed to add progress');
+            }
+        } catch (error) {
+            console.error("Failed to add progress", error);
+            toast.error('Failed to add progress');
+        } finally {
+            setSubmittingProgress(false);
+        }
+    };
+
+    const confirmMarkCompleted = async () => {
+        if (!goal || !session?.token) return;
+
+        setIsMarkingComplete(true);
+        const previousStatus = goal.status;
+        setGoal({ ...goal, status: 'done' });
+        setEditFormData(prev => ({ ...prev, status: 'done' }));
+
+        try {
+            const res = await fetch(`/api/goals/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.token}`
+                },
+                body: JSON.stringify({ status: 'done' })
+            });
+            if (!res.ok) {
+                setGoal({ ...goal, status: previousStatus });
+                setEditFormData(prev => ({ ...prev, status: previousStatus }));
+                toast.error('Failed to update status');
+            } else {
+                toast.success('Goal marked as completed!');
+                setIsCompleteDialogOpen(false); // Close on success
+            }
+        } catch (error) {
+            setGoal({ ...goal, status: previousStatus });
+            setEditFormData(prev => ({ ...prev, status: previousStatus }));
+            toast.error('Failed to update status');
+        } finally {
+            setIsMarkingComplete(false);
         }
     };
 
@@ -182,68 +259,7 @@ export default function GoalDetailPage() {
         fetchData();
     }, [id, session, router]);
 
-    const handleAddProgress = async () => {
-        if (!newProgressTitle.trim() || !session?.token) return;
-        setSubmittingProgress(true);
-        try {
-            const res = await fetch(`/api/goals/${id}/progress`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.token}`
-                },
-                body: JSON.stringify({
-                    title: newProgressTitle,
-                    description: newProgressDesc
-                })
-            });
 
-            if (res.ok) {
-                const newProgress = await res.json();
-                setProgressList([newProgress, ...progressList]);
-                setNewProgressTitle('');
-                setNewProgressDesc('');
-                setIsAddingProgress(false);
-                toast.success('Progress added!');
-            }
-        } catch (error) {
-            console.error("Failed to add progress", error);
-            toast.error('Failed to add progress');
-        } finally {
-            setSubmittingProgress(false);
-        }
-    };
-
-    const confirmMarkCompleted = async () => {
-        if (!goal || !session?.token) return;
-
-        const previousStatus = goal.status;
-        setGoal({ ...goal, status: 'done' });
-        setEditFormData(prev => ({ ...prev, status: 'done' }));
-        setIsCompleteDialogOpen(false); // Close dialog immediately
-
-        try {
-            const res = await fetch(`/api/goals/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.token}`
-                },
-                body: JSON.stringify({ status: 'done' })
-            });
-            if (!res.ok) {
-                setGoal({ ...goal, status: previousStatus });
-                setEditFormData(prev => ({ ...prev, status: previousStatus }));
-                toast.error('Failed to update status');
-            } else {
-                toast.success('Goal marked as completed!');
-            }
-        } catch (error) {
-            setGoal({ ...goal, status: previousStatus });
-            setEditFormData(prev => ({ ...prev, status: previousStatus }));
-            toast.error('Failed to update status');
-        }
-    };
 
     const handleUpdateGoal = async () => {
         if (!goal || !session?.token) return;
@@ -441,7 +457,7 @@ export default function GoalDetailPage() {
                                     <DialogFooter>
                                         <Button variant="outline" onClick={() => setIsAddingProgress(false)}>Cancel</Button>
                                         <Button onClick={handleAddProgress} disabled={submittingProgress}>
-                                            {submittingProgress ? 'Adding...' : 'Commit Progress'}
+                                            {submittingProgress ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Adding...</> : 'Commit Progress'}
                                         </Button>
                                     </DialogFooter>
                                 </DialogContent>
@@ -647,7 +663,9 @@ export default function GoalDetailPage() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
-                        <Button onClick={handleUpdateGoal} disabled={submittingEdit}>Save Changes</Button>
+                        <Button onClick={handleUpdateGoal} disabled={submittingEdit}>
+                            {submittingEdit ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Saving...</> : 'Save Changes'}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -664,7 +682,7 @@ export default function GoalDetailPage() {
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDeleteGoal} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isDeleting}>
-                            {isDeleting ? 'Deleting...' : 'Delete'}
+                            {isDeleting ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Deleting...</> : 'Delete'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -681,8 +699,8 @@ export default function GoalDetailPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmMarkCompleted} className="bg-green-600 hover:bg-green-700 text-white">
-                            Mark Completed
+                        <AlertDialogAction onClick={confirmMarkCompleted} className="bg-green-600 hover:bg-green-700 text-white" disabled={isMarkingComplete}>
+                            {isMarkingComplete ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Updating...</> : 'Mark Completed'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -699,8 +717,8 @@ export default function GoalDetailPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmRework} className="bg-orange-500 hover:bg-orange-600 text-white">
-                            ReWork
+                        <AlertDialogAction onClick={confirmRework} className="bg-orange-500 hover:bg-orange-600 text-white" disabled={isReworking}>
+                            {isReworking ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Updating...</> : 'ReWork'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
