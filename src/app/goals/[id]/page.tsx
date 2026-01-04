@@ -360,10 +360,26 @@ export default function GoalDetailPage() {
                                 <User className="h-4 w-4" />
                                 <span>{session?.name}</span>
                             </div>
-                            <Button variant="outline" size="sm" onClick={logout}>
-                                <LogOut className="h-4 w-4 mr-2" />
-                                Logout
-                            </Button>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                        <LogOut className="h-4 w-4 mr-2" />
+                                        Logout
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure you want to log out?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            You will be redirected to the login page.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={logout}>Logout</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </div>
                     </div>
                 </div>
