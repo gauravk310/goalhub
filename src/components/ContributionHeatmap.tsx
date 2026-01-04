@@ -151,89 +151,77 @@ const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals }) => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <div className="min-w-[750px]">
-            {/* Month labels */}
-            <div className="flex mb-2 ml-8">
-              {monthLabels.map(({ month, position }, index) => (
-                <div
-                  key={`${month}-${index}`}
-                  className="text-xs text-muted-foreground"
-                  style={{
-                    position: 'absolute',
-                    left: `${position * 14 + 32}px`,
-                  }}
-                >
-                  {month}
-                </div>
+        <div className="w-full">
+          {/* Month labels */}
+          <div className="flex mb-2">
+            <div className="w-8 shrink-0" /> {/* Spacer for day labels */}
+            <div className="flex flex-1 gap-1">
+              {weeksData.map((_, index) => {
+                const label = monthLabels.find(l => l.position === index);
+                return (
+                  <div key={index} className="flex-1 relative overflow-visible">
+                    {label && (
+                      <span className="absolute text-xs text-muted-foreground font-medium -left-2">
+                        {label.month}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex">
+            {/* Day labels */}
+            <div className="flex flex-col justify-around pr-2 text-xs text-muted-foreground w-8 shrink-0 h-[100px]">
+              {DAYS.map(day => (
+                <span key={day}>{day}</span>
               ))}
             </div>
 
-            {/* Simplified month labels row */}
-            <div className="flex gap-[3px] mb-1 ml-8">
-              {MONTHS.map((month, i) => (
-                <div
-                  key={month}
-                  className="text-xs text-muted-foreground"
-                  style={{ width: `${(weeksData.length / 12) * 14}px` }}
-                >
-                  {month}
-                </div>
-              ))}
-            </div>
-
-            <div className="flex">
-              {/* Day labels */}
-              <div className="flex flex-col justify-around pr-2 text-xs text-muted-foreground" style={{ height: '98px' }}>
-                {DAYS.map(day => (
-                  <span key={day}>{day}</span>
+            {/* Contribution grid */}
+            <TooltipProvider>
+              <div className="flex flex-1 gap-1 h-[100px]">
+                {weeksData.map((week, weekIndex) => (
+                  <div key={weekIndex} className="flex flex-col flex-1 gap-1">
+                    {week.map((day, dayIndex) => (
+                      <Tooltip key={dayIndex}>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-full flex-1 rounded-[2px] transition-colors ${getContributionLevel(day.count)} ${day.count >= 0 ? 'hover:brightness-90 cursor-pointer' : ''}`}
+                          />
+                        </TooltipTrigger>
+                        {day.count >= 0 && (
+                          <TooltipContent>
+                            <p className="font-medium">
+                              {day.count === 0
+                                ? 'No goals completed'
+                                : `${day.count} goal${day.count > 1 ? 's' : ''} completed`}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {formatDate(day.date)}
+                            </p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    ))}
+                  </div>
                 ))}
               </div>
+            </TooltipProvider>
+          </div>
 
-              {/* Contribution grid */}
-              <TooltipProvider>
-                <div className="flex gap-[3px]">
-                  {weeksData.map((week, weekIndex) => (
-                    <div key={weekIndex} className="flex flex-col gap-[3px]">
-                      {week.map((day, dayIndex) => (
-                        <Tooltip key={dayIndex}>
-                          <TooltipTrigger asChild>
-                            <div
-                              className={`w-[11px] h-[11px] rounded-sm transition-colors ${getContributionLevel(day.count)} ${day.count >= 0 ? 'hover:ring-1 hover:ring-foreground/30' : ''}`}
-                            />
-                          </TooltipTrigger>
-                          {day.count >= 0 && (
-                            <TooltipContent>
-                              <p className="font-medium">
-                                {day.count === 0
-                                  ? 'No goals completed'
-                                  : `${day.count} goal${day.count > 1 ? 's' : ''} completed`}
-                              </p>
-                              <p className="text-muted-foreground text-xs">
-                                {formatDate(day.date)}
-                              </p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </TooltipProvider>
+          {/* Legend */}
+          <div className="flex items-center justify-end gap-2 mt-4 text-xs text-muted-foreground">
+            <span>Less</span>
+            <div className="flex gap-1">
+              <div className="w-4 h-3 rounded-[2px] bg-muted/50" />
+              <div className="w-4 h-3 rounded-[2px] bg-status-done/30" />
+              <div className="w-4 h-3 rounded-[2px] bg-status-done/50" />
+              <div className="w-4 h-3 rounded-[2px] bg-status-done/70" />
+              <div className="w-4 h-3 rounded-[2px] bg-status-done" />
             </div>
-
-            {/* Legend */}
-            <div className="flex items-center justify-end gap-2 mt-4 text-xs text-muted-foreground">
-              <span>Less</span>
-              <div className="flex gap-[3px]">
-                <div className="w-[11px] h-[11px] rounded-sm bg-muted/50" />
-                <div className="w-[11px] h-[11px] rounded-sm bg-status-done/30" />
-                <div className="w-[11px] h-[11px] rounded-sm bg-status-done/50" />
-                <div className="w-[11px] h-[11px] rounded-sm bg-status-done/70" />
-                <div className="w-[11px] h-[11px] rounded-sm bg-status-done" />
-              </div>
-              <span>More</span>
-            </div>
+            <span>More</span>
           </div>
         </div>
       </CardContent>
