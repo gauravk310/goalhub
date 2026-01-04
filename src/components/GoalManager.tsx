@@ -109,7 +109,7 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
   const { session } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [filters, setFilters] = useState<GoalFilters>({});
+  const [filters, setFilters] = useState<GoalFilters>({ type: 'daily', status: 'pending' });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
@@ -123,6 +123,8 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
     status: 'pending' as GoalStatus,
   });
 
+  const [hasInitializedFilters, setHasInitializedFilters] = useState(false);
+
   const loadData = async () => {
     if (session) {
       try {
@@ -132,6 +134,14 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
         ]);
         setGoals(userGoals);
         setCategories(userCats);
+
+        if (!hasInitializedFilters) {
+          const hasDailyPending = userGoals.some(g => g.type === 'daily' && g.status === 'pending');
+          if (!hasDailyPending) {
+            setFilters(prev => ({ ...prev, status: 'working' }));
+          }
+          setHasInitializedFilters(true);
+        }
       } catch (error) {
         console.error('Failed to load data', error);
       }
@@ -168,7 +178,7 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
       description: '',
       categoryId: categories[0]?.id || '',
       type: 'daily',
-      priority: 'medium',
+      priority: 'high',
       status: 'pending',
     });
     setIsDialogOpen(true);
@@ -460,7 +470,18 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
                   <Label>Type</Label>
                   <Select
                     value={formData.type}
-                    onValueChange={(v) => setFormData((prev) => ({ ...prev, type: v as GoalType }))}
+                    onValueChange={(v) => {
+                      const newType = v as GoalType;
+                      setFormData((prev) => {
+                        let newPriority = prev.priority;
+                        if (!selectedGoal) {
+                          if (newType === 'daily') newPriority = 'high';
+                          else if (newType === 'weekly') newPriority = 'medium';
+                          else if (newType === 'monthly') newPriority = 'low';
+                        }
+                        return { ...prev, type: newType, priority: newPriority };
+                      });
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />

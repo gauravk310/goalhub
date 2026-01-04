@@ -20,9 +20,14 @@ export const addGoalProgress = async (goalId: string, userId: string, data: any)
     await connectDB();
 
     // Verify goal exists and belongs to user
-    const goal = await Goal.findOne({ _id: goalId, userId });
+    const goal: any = await Goal.findOne({ _id: goalId, userId });
     if (!goal) {
         throw new Error('Goal not found');
+    }
+
+    if (goal.status === 'pending') {
+        goal.status = 'working';
+        await goal.save();
     }
 
     const progress = await GoalProgress.create({
