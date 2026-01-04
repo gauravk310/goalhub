@@ -56,36 +56,7 @@ const DashboardContent: React.FC = () => {
                             <h1 className="text-xl font-bold text-foreground">GoalFlow</h1>
                         </div>
 
-                        {/* Desktop Navigation */}
-                        <nav className="hidden md:flex items-center gap-6 absolute left-1/2 transform -translate-x-1/2">
-                            <button
-                                onClick={() => setActiveTab('dashboard')}
-                                className={cn(
-                                    "text-sm font-medium transition-colors hover:text-primary",
-                                    activeTab === 'dashboard' ? "text-primary" : "text-muted-foreground"
-                                )}
-                            >
-                                Dashboard
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('goals')}
-                                className={cn(
-                                    "text-sm font-medium transition-colors hover:text-primary",
-                                    activeTab === 'goals' ? "text-primary" : "text-muted-foreground"
-                                )}
-                            >
-                                Goals
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('categories')}
-                                className={cn(
-                                    "text-sm font-medium transition-colors hover:text-primary",
-                                    activeTab === 'categories' ? "text-primary" : "text-muted-foreground"
-                                )}
-                            >
-                                Categories
-                            </button>
-                        </nav>
+
 
                         <div className="flex items-center gap-4">
                             <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
@@ -100,6 +71,50 @@ const DashboardContent: React.FC = () => {
                     </div>
                 </div>
             </header>
+
+            {/* Navigation Bar */}
+            <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-16 z-40 hidden md:block">
+                <div className="container mx-auto px-4">
+                    <nav className="flex items-center gap-1 py-2">
+                        <button
+                            onClick={() => setActiveTab('dashboard')}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all",
+                                activeTab === 'dashboard'
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                        >
+                            <LayoutDashboard className="h-4 w-4" />
+                            Dashboard
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('goals')}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all",
+                                activeTab === 'goals'
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                        >
+                            <ListTodo className="h-4 w-4" />
+                            Goals
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('categories')}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all",
+                                activeTab === 'categories'
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                        >
+                            <FolderOpen className="h-4 w-4" />
+                            Categories
+                        </button>
+                    </nav>
+                </div>
+            </div>
 
             {/* Main Content */}
             <main className="container mx-auto px-4 py-6">
@@ -132,7 +147,7 @@ const DashboardContent: React.FC = () => {
                     </TabsContent>
 
                     <TabsContent value="categories" className="animate-fade-in">
-                        <div className="max-w-2xl">
+                        <div className="w-full">
                             <div className="mb-6">
                                 <h2 className="text-2xl font-bold text-foreground">Manage Categories</h2>
                                 <p className="text-muted-foreground">Organize your goals into categories</p>
