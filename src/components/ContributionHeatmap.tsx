@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Goal } from '@/types';
+import { Goal, GoalProgress } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,32 +19,34 @@ import {
 
 interface ContributionHeatmapProps {
   goals: Goal[];
+  progress: GoalProgress[];
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = ['Mon', 'Wed', 'Fri'];
 
-const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals }) => {
+const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals, progress }) => {
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth();
 
-  const [viewMode, setViewMode] = useState<'yearly' | 'monthly'>('yearly');
+  const [viewMode, setViewMode] = useState<'yearly' | 'monthly'>('monthly');
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
   const contributionData = useMemo(() => {
-    // Create a map of date -> completed goals count
-    const completedGoals = goals.filter(g => g.status === 'done');
+    // Create a map of date -> goal progress count
     const dateMap: Record<string, number> = {};
 
-    completedGoals.forEach(goal => {
-      const date = new Date(goal.updatedAt).toISOString().split('T')[0];
-      dateMap[date] = (dateMap[date] || 0) + 1;
-    });
+    if (progress && progress.length > 0) {
+      progress.forEach(p => {
+        const date = new Date(p.createdAt).toISOString().split('T')[0];
+        dateMap[date] = (dateMap[date] || 0) + 1;
+      });
+    }
 
     return dateMap;
-  }, [goals]);
+  }, [progress]);
 
   const weeksData = useMemo(() => {
     const weeks: { date: Date; count: number }[][] = [];
@@ -195,7 +197,7 @@ const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals }) => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <CardTitle className="text-lg flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
-            <span className="text-status-done font-semibold">{totalContributions} completed goals</span>
+            <span className="text-status-done font-semibold">{totalContributions} contributions</span>
             <span className="text-muted-foreground font-normal">
               in {viewMode === 'yearly' ? selectedYear : `${MONTHS[selectedMonth]} ${selectedYear}`}
             </span>
@@ -285,8 +287,8 @@ const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals }) => {
                           <TooltipContent>
                             <p className="font-medium">
                               {day.count === 0
-                                ? 'No goals completed'
-                                : `${day.count} goal${day.count > 1 ? 's' : ''} completed`}
+                                ? 'No activity'
+                                : `${day.count} contribution${day.count > 1 ? 's' : ''}`}
                             </p>
                             <p className="text-muted-foreground text-xs">
                               {formatDate(day.date)}

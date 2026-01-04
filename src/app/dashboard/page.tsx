@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { Goal, Category } from '@/types';
-import { getGoals, getCategories } from '@/lib/dataService';
+import { getGoals, getCategories, getAllProgress } from '@/lib/dataService';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CategoryManager from '@/components/CategoryManager';
@@ -12,23 +12,27 @@ import GoalManager from '@/components/GoalManager';
 import DashboardCharts from '@/components/DashboardCharts';
 import { Target, LayoutDashboard, ListTodo, FolderOpen, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { GoalProgress } from '@/types';
 
 const DashboardContent: React.FC = () => {
     const { session, logout } = useAuth();
     const [goals, setGoals] = useState<Goal[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [progress, setProgress] = useState<GoalProgress[]>([]);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [activeTab, setActiveTab] = useState('dashboard');
 
     const loadData = async () => {
         if (session) {
             try {
-                const [userGoals, userCats] = await Promise.all([
+                const [userGoals, userCats, userProgress] = await Promise.all([
                     getGoals(session.userId),
                     getCategories(session.userId),
+                    getAllProgress(session.userId),
                 ]);
                 setGoals(userGoals);
                 setCategories(userCats);
+                setProgress(userProgress);
             } catch (error) {
                 console.error(error);
             }
@@ -86,7 +90,7 @@ const DashboardContent: React.FC = () => {
                             )}
                         >
                             <LayoutDashboard className="h-4 w-4" />
-                            Dashboard
+                            Overview
                         </button>
                         <button
                             onClick={() => setActiveTab('goals')}
@@ -122,7 +126,7 @@ const DashboardContent: React.FC = () => {
                     <TabsList className="grid w-full max-w-md grid-cols-3 mb-6 md:hidden">
                         <TabsTrigger value="dashboard" className="flex items-center gap-2">
                             <LayoutDashboard className="h-4 w-4" />
-                            <span className="hidden sm:inline">Dashboard</span>
+                            <span className="hidden sm:inline">Overview</span>
                         </TabsTrigger>
                         <TabsTrigger value="goals" className="flex items-center gap-2">
                             <ListTodo className="h-4 w-4" />
@@ -139,7 +143,7 @@ const DashboardContent: React.FC = () => {
                             <h2 className="text-2xl font-bold text-foreground">Performance Overview</h2>
                             <p className="text-muted-foreground">Track your goal progress and analytics</p>
                         </div>
-                        <DashboardCharts goals={goals} categories={categories} />
+                        <DashboardCharts goals={goals} categories={categories} progress={progress} />
                     </TabsContent>
 
                     <TabsContent value="goals" className="animate-fade-in">

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Goal, Category, DashboardStats, GoalStatus, GoalPriority, GoalType } from '@/types';
+import { Goal, Category, DashboardStats, GoalStatus, GoalPriority, GoalType, GoalProgress } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -37,6 +37,7 @@ import ContributionHeatmap from './ContributionHeatmap';
 interface DashboardChartsProps {
   goals: Goal[];
   categories: Category[];
+  progress: GoalProgress[];
 }
 
 const STATUS_COLORS: Record<GoalStatus, string> = {
@@ -57,7 +58,7 @@ const TYPE_COLORS: Record<GoalType, string> = {
   monthly: 'hsl(142, 71%, 45%)',
 };
 
-const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories }) => {
+const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, progress }) => {
   const router = useRouter();
   const stats = useMemo<DashboardStats>(() => {
     const statusDistribution: Record<GoalStatus, number> = {
@@ -468,10 +469,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories }) 
         </Card>
       </div>
 
-
-
       {/* Contribution Heatmap */}
-      <ContributionHeatmap goals={goals} />
+      <ContributionHeatmap goals={goals} progress={progress} />
 
       {/* Recent Activity */}
       <Card className="animate-slide-up" style={{ animationDelay: '100ms' }}>
