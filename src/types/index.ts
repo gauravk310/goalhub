@@ -34,6 +34,15 @@ export interface Goal {
   updatedAt: string;
 }
 
+export interface GoalProgress {
+  id: string;
+  goalId: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuthSession {
   userId: string;
   email: string;

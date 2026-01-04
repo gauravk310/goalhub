@@ -1,4 +1,7 @@
+"use client";
+
 import React, { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Goal, Category, DashboardStats, GoalStatus, GoalPriority, GoalType } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +58,7 @@ const TYPE_COLORS: Record<GoalType, string> = {
 };
 
 const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories }) => {
+  const router = useRouter();
   const stats = useMemo<DashboardStats>(() => {
     const statusDistribution: Record<GoalStatus, number> = {
       pending: 0,
@@ -205,6 +209,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories }) 
               {stats.highPriorityGoals.map((goal) => (
                 <div
                   key={goal.id}
+                  onClick={() => router.push(`/goals/${goal.id}`)}
                   className="flex items-center justify-between p-3 bg-destructive/10 border border-destructive/20 rounded-lg hover:bg-destructive/15 transition-colors cursor-pointer group h-full"
                 >
                   <div className="flex-1 min-w-0">
@@ -479,7 +484,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories }) 
               {stats.recentActivity.map((goal) => (
                 <div
                   key={goal.id}
-                  className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                  onClick={() => router.push(`/goals/${goal.id}`)}
+                  className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg cursor-pointer hover:bg-secondary/70 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground truncate">{goal.title}</p>

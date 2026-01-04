@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Goal, Category, GoalFilters, GoalStatus, GoalPriority, GoalType } from '@/types';
 import { getGoals, getCategories, createGoal, updateGoal, deleteGoal } from '@/lib/dataService';
@@ -399,7 +400,9 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-foreground truncate">{goal.title}</h3>
+                      <Link href={`/goals/${goal.id}`} className="block min-w-0 flex-1 hover:underline">
+                        <h3 className="font-semibold text-foreground truncate">{goal.title}</h3>
+                      </Link>
                       {category && (
                         <Badge
                           variant="outline"
@@ -443,20 +446,7 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
                         <SelectItem value="done">Done</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(goal)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => {
-                        setSelectedGoal(goal);
-                        setIsDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+
                   </div>
                 </div>
               </div>

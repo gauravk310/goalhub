@@ -8,6 +8,17 @@ export const getGoals = async (userId: string) => {
     return goals;
 };
 
+export const getGoal = async (id: string, userId: string) => {
+    await connectDB();
+    const goal = await Goal.findOne({ _id: id, userId });
+
+    if (!goal) {
+        throw new Error('Goal not found');
+    }
+
+    return goal;
+};
+
 export const createGoal = async (req: Request, userId: string) => {
     await connectDB();
     const data = await req.json();
