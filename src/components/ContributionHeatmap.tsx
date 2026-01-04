@@ -2,6 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { Goal } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import {
   Tooltip,
@@ -18,9 +25,13 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const DAYS = ['Mon', 'Wed', 'Fri'];
 
 const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals }) => {
-  const currentYear = new Date().getFullYear();
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+
+  const [viewMode, setViewMode] = useState<'yearly' | 'monthly'>('yearly');
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
   const contributionData = useMemo(() => {
     // Create a map of date -> completed goals count
@@ -37,10 +48,18 @@ const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals }) => {
 
   const weeksData = useMemo(() => {
     const weeks: { date: Date; count: number }[][] = [];
-    const startDate = new Date(selectedYear, 0, 1);
-    const endDate = new Date(selectedYear, 11, 31);
+    let startDate: Date;
+    let endDate: Date;
 
-    // Find the first Sunday of the year or the last Sunday of previous year
+    if (viewMode === 'yearly') {
+      startDate = new Date(selectedYear, 0, 1);
+      endDate = new Date(selectedYear, 11, 31);
+    } else {
+      startDate = new Date(selectedYear, selectedMonth, 1);
+      endDate = new Date(selectedYear, selectedMonth + 1, 0);
+    }
+
+    // Find the first Sunday of the period
     const firstDay = startDate.getDay();
     const startOffset = firstDay === 0 ? 0 : -firstDay;
     const adjustedStart = new Date(startDate);
@@ -49,13 +68,23 @@ const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals }) => {
     let currentDate = new Date(adjustedStart);
     let currentWeek: { date: Date; count: number }[] = [];
 
-    while (currentDate <= endDate || currentWeek.length > 0) {
+    // Loop until we cover the end date AND complete the last week
+    // or if purely monthly, we might stop at the last covered week
+    while (true) {
+      if (currentDate > endDate && currentWeek.length === 0) break;
+
       const dateStr = currentDate.toISOString().split('T')[0];
-      const isInYear = currentDate.getFullYear() === selectedYear;
+
+      let isValidDay = false;
+      if (viewMode === 'yearly') {
+        isValidDay = currentDate.getFullYear() === selectedYear;
+      } else {
+        isValidDay = currentDate.getMonth() === selectedMonth && currentDate.getFullYear() === selectedYear;
+      }
 
       currentWeek.push({
         date: new Date(currentDate),
-        count: isInYear ? (contributionData[dateStr] || 0) : -1,
+        count: isValidDay ? (contributionData[dateStr] || 0) : -1,
       });
 
       if (currentWeek.length === 7) {
@@ -64,21 +93,61 @@ const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals }) => {
       }
 
       currentDate.setDate(currentDate.getDate() + 1);
-      if (currentDate > endDate && currentWeek.length === 0) break;
     }
 
-    if (currentWeek.length > 0) {
-      weeks.push(currentWeek);
-    }
+    // Safety break loop is handled by logic, but `while(true)` is risky if dates don't advance. 
+    // Logic ensures currentDate increments.
+    // Ensure we don't go infinitely if something is weird.
+    // (Implicitly trusted logic from previous working code)
 
     return weeks;
-  }, [selectedYear, contributionData]);
+  }, [selectedYear, selectedMonth, viewMode, contributionData]);
 
   const totalContributions = useMemo(() => {
     return Object.entries(contributionData)
-      .filter(([date]) => date.startsWith(String(selectedYear)))
+      .filter(([date]) => {
+        const d = new Date(date);
+        if (viewMode === 'yearly') {
+          return d.getFullYear() === selectedYear;
+        } else {
+          return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+        }
+      })
       .reduce((sum, [_, count]) => sum + count, 0);
-  }, [contributionData, selectedYear]);
+  }, [contributionData, selectedYear, selectedMonth, viewMode]);
+
+  const handlePrevious = () => {
+    if (viewMode === 'yearly') {
+      setSelectedYear(prev => prev - 1);
+    } else {
+      if (selectedMonth === 0) {
+        setSelectedMonth(11);
+        setSelectedYear(prev => prev - 1);
+      } else {
+        setSelectedMonth(prev => prev - 1);
+      }
+    }
+  };
+
+  const handleNext = () => {
+    if (viewMode === 'yearly') {
+      setSelectedYear(prev => prev + 1);
+    } else {
+      if (selectedMonth === 11) {
+        setSelectedMonth(0);
+        setSelectedYear(prev => prev + 1);
+      } else {
+        setSelectedMonth(prev => prev + 1);
+      }
+    }
+  };
+
+  const isNextDisabled = () => {
+    if (viewMode === 'yearly') {
+      return selectedYear >= currentYear;
+    }
+    return selectedYear > currentYear || (selectedYear === currentYear && selectedMonth >= currentMonth);
+  };
 
   const getContributionLevel = (count: number): string => {
     if (count < 0) return 'bg-transparent';
@@ -99,6 +168,8 @@ const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals }) => {
   };
 
   const getMonthLabels = () => {
+    if (viewMode === 'monthly') return [];
+
     const labels: { month: string; position: number }[] = [];
     let lastMonth = -1;
 
@@ -121,32 +192,51 @@ const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals }) => {
   return (
     <Card className="animate-slide-up">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <CardTitle className="text-lg flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
             <span className="text-status-done font-semibold">{totalContributions} completed goals</span>
-            <span className="text-muted-foreground font-normal">in {selectedYear}</span>
+            <span className="text-muted-foreground font-normal">
+              in {viewMode === 'yearly' ? selectedYear : `${MONTHS[selectedMonth]} ${selectedYear}`}
+            </span>
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setSelectedYear(prev => prev - 1)}
-              disabled={selectedYear <= currentYear - 4}
+            <Select
+              value={viewMode}
+              onValueChange={(v: 'yearly' | 'monthly') => setViewMode(v)}
             >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium w-12 text-center">{selectedYear}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setSelectedYear(prev => prev + 1)}
-              disabled={selectedYear >= currentYear}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+              <SelectTrigger className="w-[110px] h-8 text-xs">
+                <SelectValue placeholder="View" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="yearly">Yearly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center border rounded-md">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-r-none"
+                onClick={handlePrevious}
+                disabled={selectedYear <= currentYear - 5} // Arbitrary limit
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium w-24 text-center px-2">
+                {viewMode === 'yearly' ? selectedYear : `${MONTHS[selectedMonth]} ${selectedYear}`}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-l-none"
+                onClick={handleNext}
+                disabled={isNextDisabled()}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </CardHeader>
