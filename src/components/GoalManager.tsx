@@ -113,6 +113,7 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
   const [filters, setFilters] = useState<GoalFilters>({ type: 'daily', status: 'pending' });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [statusConfirmData, setStatusConfirmData] = useState<{ goal: Goal; newStatus: GoalStatus } | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [formData, setFormData] = useState({
@@ -236,7 +237,14 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
 
 
 
-  const handleStatusUpdate = async (goal: Goal, newStatus: GoalStatus) => {
+  const handleStatusUpdate = (goal: Goal, newStatus: GoalStatus) => {
+    setStatusConfirmData({ goal, newStatus });
+  };
+
+  const confirmStatusUpdate = async () => {
+    if (!statusConfirmData) return;
+    const { goal, newStatus } = statusConfirmData;
+
     try {
       // Optimistic update
       setGoals(goals.map(g => g.id === goal.id ? { ...g, status: newStatus } : g));
@@ -247,6 +255,8 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
     } catch (error) {
       toast.error('Failed to update status');
       loadData();
+    } finally {
+      setStatusConfirmData(null);
     }
   };
 
@@ -620,6 +630,22 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
             >
               Delete
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Status Change Confirmation Dialog */}
+      <AlertDialog open={!!statusConfirmData} onOpenChange={(open) => !open && setStatusConfirmData(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Goal Status</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to change the status of "{statusConfirmData?.goal.title}" to <span className="font-medium capitalize">{statusConfirmData?.newStatus}</span>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmStatusUpdate}>Confirm</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
