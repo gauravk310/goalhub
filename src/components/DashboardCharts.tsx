@@ -388,16 +388,22 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, pr
             <CardTitle className="text-sm font-medium">Daily History (Last 7 Days)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dailyHistory}>
-                  <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }} />
-                  <Bar dataKey="completedCount" name="Completed" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} stackId="a" />
-                  <Bar dataKey="pendingCount" name="Pending" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} stackId="a" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {dailyHistory.length > 0 ? (
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dailyHistory}>
+                    <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
+                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }} />
+                    <Bar dataKey="completedCount" name="Completed" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} stackId="a" />
+                    <Bar dataKey="pendingCount" name="Pending" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                No data found
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -406,16 +412,22 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, pr
             <CardTitle className="text-sm font-medium">Weekly History (Last 4 Weeks)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weeklyHistory}>
-                  <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }} />
-                  <Bar dataKey="completedCount" name="Completed" fill="hsl(199, 89%, 48%)" radius={[4, 4, 0, 0]} stackId="a" />
-                  <Bar dataKey="pendingCount" name="Pending" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} stackId="a" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {weeklyHistory.length > 0 ? (
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyHistory}>
+                    <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
+                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }} />
+                    <Bar dataKey="completedCount" name="Completed" fill="hsl(199, 89%, 48%)" radius={[4, 4, 0, 0]} stackId="a" />
+                    <Bar dataKey="pendingCount" name="Pending" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                No data found
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -424,16 +436,22 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, pr
             <CardTitle className="text-sm font-medium">Monthly History (Last 6 Months)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyHistory}>
-                  <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }} />
-                  <Bar dataKey="completedCount" name="Completed" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} stackId="a" />
-                  <Bar dataKey="pendingCount" name="Pending" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} stackId="a" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {monthlyHistory.length > 0 ? (
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthlyHistory}>
+                    <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
+                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }} />
+                    <Bar dataKey="completedCount" name="Completed" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} stackId="a" />
+                    <Bar dataKey="pendingCount" name="Pending" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                No data found
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
