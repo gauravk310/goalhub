@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Goal, GoalProgress } from '@/types';
+import { Goal, GoalProgress, GoalHistory } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,33 +20,48 @@ import {
 interface ContributionHeatmapProps {
   goals: Goal[];
   progress: GoalProgress[];
+  history: GoalHistory[];
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = ['Mon', 'Wed', 'Fri'];
 
-const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals, progress }) => {
+const ContributionHeatmap: React.FC<ContributionHeatmapProps> = ({ goals, progress, history }) => {
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth();
+  const todayStr = today.toISOString().split('T')[0];
 
   const [viewMode, setViewMode] = useState<'yearly' | 'monthly'>('monthly');
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
   const contributionData = useMemo(() => {
-    // Create a map of date -> goal progress count
+    // Create a map of date -> completed goal count
     const dateMap: Record<string, number> = {};
 
-    if (progress && progress.length > 0) {
-      progress.forEach(p => {
-        const date = new Date(p.createdAt).toISOString().split('T')[0];
-        dateMap[date] = (dateMap[date] || 0) + 1;
+    // 1. Populate from History (Past completed daily goals)
+    if (history && history.length > 0) {
+      history.forEach(h => {
+        // Only consider daily goals for the heatmap to avoid double counting or confusion with long-term goals
+        if (h.period === 'daily') {
+          dateMap[h.date] = h.completedCount;
+        }
       });
     }
 
+    // 2. Populate for Today (Current active daily goals)
+    // We only do this if we don't already have a history record for today (which we shouldn't, as history is for past)
+    if (!dateMap[todayStr]) {
+      const completedToday = goals.filter(g => g.type === 'daily' && g.status === 'done').length;
+      if (completedToday > 0) {
+        dateMap[todayStr] = completedToday;
+      }
+    }
+
     return dateMap;
-  }, [progress]);
+  }, [goals, history, todayStr]);
+
 
   const weeksData = useMemo(() => {
     const weeks: { date: Date; count: number }[][] = [];

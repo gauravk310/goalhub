@@ -553,7 +553,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, pr
       </div>
 
       {/* Contribution Heatmap */}
-      <ContributionHeatmap goals={goals} progress={progress} />
+      <ContributionHeatmap goals={goals} progress={progress} history={history} />
 
       {/* Recent Activity */}
       <Card className="animate-slide-up" style={{ animationDelay: '100ms' }}>
