@@ -57,11 +57,15 @@ export interface Learning {
   updatedAt: string;
 }
 
-export interface LearningProgress {
+export type ResourceStatus = 'pending' | 'learning' | 'done';
+
+export interface Resource {
   id: string;
   learningId: string;
   title: string;
-  description: string;
+  source: string;
+  link: string;
+  status: ResourceStatus;
   createdAt: string;
   updatedAt: string;
 }

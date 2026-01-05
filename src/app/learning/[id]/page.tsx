@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Learning, LearningProgress, Category, LearningStatus } from '@/types';
+import { Learning, Resource, Category, LearningStatus, ResourceStatus } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import {
     Target,
@@ -19,7 +19,9 @@ import {
     Loader2,
     Calendar,
     RotateCcw,
-    CheckCircle
+    CheckCircle,
+    MoreVertical,
+    Link as LinkIcon
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -71,14 +73,34 @@ export default function LearningDetailPage() {
     const router = useRouter();
 
     const [learning, setLearning] = useState<Learning | null>(null);
-    const [progressList, setProgressList] = useState<LearningProgress[]>([]);
+    const [resources, setResources] = useState<Resource[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const [isAddingProgress, setIsAddingProgress] = useState(false);
-    const [newProgressTitle, setNewProgressTitle] = useState('');
-    const [newProgressDesc, setNewProgressDesc] = useState('');
-    const [submittingProgress, setSubmittingProgress] = useState(false);
+    const [isAddingResource, setIsAddingResource] = useState(false);
+    const [resourceForm, setResourceForm] = useState({
+        title: '',
+        source: '',
+        link: '',
+        status: 'pending' as ResourceStatus
+    });
+    const [submittingResource, setSubmittingResource] = useState(false);
+
+    // Edit Resource State
+    const [editingResource, setEditingResource] = useState<Resource | null>(null);
+    const [isEditResourceOpen, setIsEditResourceOpen] = useState(false);
+    const [editResourceForm, setEditResourceForm] = useState({
+        title: '',
+        source: '',
+        link: '',
+        status: 'pending' as ResourceStatus
+    });
+    const [submittingResourceEdit, setSubmittingResourceEdit] = useState(false);
+
+    // Delete Resource State
+    const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
+    const [isDeleteResourceOpen, setIsDeleteResourceOpen] = useState(false);
+    const [isDeletingResource, setIsDeletingResource] = useState(false);
 
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -125,13 +147,13 @@ export default function LearningDetailPage() {
                     setCategories(catData);
                 }
 
-                // Fetch Progress
-                const progressRes = await fetch(`/api/learnings/${id}/progress`, {
+                // Fetch Resources
+                const resourcesRes = await fetch(`/api/learnings/${id}/resources`, {
                     headers: { 'Authorization': `Bearer ${session.token}` }
                 });
-                if (progressRes.ok) {
-                    const progressData = await progressRes.json();
-                    setProgressList(progressData);
+                if (resourcesRes.ok) {
+                    const resourcesData = await resourcesRes.json();
+                    setResources(resourcesData);
                 }
             } catch (error) {
                 console.error("Failed to fetch data", error);
@@ -143,37 +165,90 @@ export default function LearningDetailPage() {
         fetchData();
     }, [id, session, router]);
 
-    const handleAddProgress = async () => {
-        if (!newProgressTitle.trim() || !session?.token) return;
-        setSubmittingProgress(true);
+    const handleAddResource = async () => {
+        if (!resourceForm.title.trim() || !session?.token) return;
+        setSubmittingResource(true);
         try {
-            const res = await fetch(`/api/learnings/${id}/progress`, {
+            const res = await fetch(`/api/learnings/${id}/resources`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${session.token}`
                 },
-                body: JSON.stringify({
-                    title: newProgressTitle,
-                    description: newProgressDesc
-                })
+                body: JSON.stringify(resourceForm)
             });
 
             if (res.ok) {
-                const newProgress = await res.json();
-                setProgressList([newProgress, ...progressList]);
-                setNewProgressTitle('');
-                setNewProgressDesc('');
-                setIsAddingProgress(false);
-                toast.success('Progress added!');
+                const newResource = await res.json();
+                setResources([newResource, ...resources]);
+                setResourceForm({ title: '', source: '', link: '', status: 'pending' });
+                setIsAddingResource(false);
+                toast.success('Resource added!');
             } else {
-                toast.error('Failed to add progress');
+                toast.error('Failed to add resource');
             }
         } catch (error) {
-            console.error("Failed to add progress", error);
-            toast.error('Failed to add progress');
+            console.error("Failed to add resource", error);
+            toast.error('Failed to add resource');
         } finally {
-            setSubmittingProgress(false);
+            setSubmittingResource(false);
+        }
+    };
+
+    const handleUpdateResource = async () => {
+        if (!editingResource || !session?.token) return;
+        setSubmittingResourceEdit(true);
+        try {
+            const res = await fetch(`/api/resources/${editingResource.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.token}`
+                },
+                body: JSON.stringify(editResourceForm)
+            });
+
+            if (res.ok) {
+                const updated = await res.json();
+                setResources(resources.map(r => r.id === updated.id ? updated : r));
+                setIsEditResourceOpen(false);
+                setEditingResource(null);
+                toast.success('Resource updated');
+            } else {
+                toast.error('Failed to update resource');
+            }
+        } catch (error) {
+            console.error('Update failed', error);
+            toast.error('Failed to update resource');
+        } finally {
+            setSubmittingResourceEdit(false);
+        }
+    };
+
+    const handleDeleteResource = async () => {
+        if (!resourceToDelete || !session?.token) return;
+        setIsDeletingResource(true);
+        try {
+            const res = await fetch(`/api/resources/${resourceToDelete.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${session.token}`
+                }
+            });
+
+            if (res.ok) {
+                setResources(resources.filter(r => r.id !== resourceToDelete.id));
+                setIsDeleteResourceOpen(false);
+                setResourceToDelete(null);
+                toast.success('Resource deleted');
+            } else {
+                toast.error('Failed to delete resource');
+            }
+        } catch (error) {
+            console.error('Delete failed', error);
+            toast.error('Failed to delete resource');
+        } finally {
+            setIsDeletingResource(false);
         }
     };
 
@@ -356,42 +431,66 @@ export default function LearningDetailPage() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Dialog open={isAddingProgress} onOpenChange={setIsAddingProgress}>
+                                <Dialog open={isAddingResource} onOpenChange={setIsAddingResource}>
                                     <DialogTrigger asChild>
                                         <Button
                                             size="sm"
                                             className="gap-2 bg-green-600 hover:bg-green-700 text-white"
                                             disabled={learning.status === 'done'}
                                         >
-                                            Add progress
+                                            Add Resource
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent>
                                         <DialogHeader>
-                                            <DialogTitle>Add Progress Update</DialogTitle>
+                                            <DialogTitle>Add Learning Resource</DialogTitle>
                                         </DialogHeader>
                                         <div className="space-y-4 py-4">
                                             <div className="space-y-2">
-                                                <Label>Summary (Title)</Label>
+                                                <Label>Title</Label>
                                                 <Input
-                                                    placeholder="What did you learn today?"
-                                                    value={newProgressTitle}
-                                                    onChange={(e) => setNewProgressTitle(e.target.value)}
+                                                    placeholder="Resource title"
+                                                    value={resourceForm.title}
+                                                    onChange={(e) => setResourceForm({ ...resourceForm, title: e.target.value })}
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label>Description</Label>
-                                                <Textarea
-                                                    placeholder="Add more details..."
-                                                    value={newProgressDesc}
-                                                    onChange={(e) => setNewProgressDesc(e.target.value)}
+                                                <Label>Source (Optional)</Label>
+                                                <Input
+                                                    placeholder="e.g. YouTube, Medium"
+                                                    value={resourceForm.source}
+                                                    onChange={(e) => setResourceForm({ ...resourceForm, source: e.target.value })}
                                                 />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Link (Optional)</Label>
+                                                <Input
+                                                    placeholder="https://..."
+                                                    value={resourceForm.link}
+                                                    onChange={(e) => setResourceForm({ ...resourceForm, link: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Status</Label>
+                                                <Select
+                                                    value={resourceForm.status}
+                                                    onValueChange={(val) => setResourceForm({ ...resourceForm, status: val as ResourceStatus })}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="pending">Pending</SelectItem>
+                                                        <SelectItem value="learning">Learning</SelectItem>
+                                                        <SelectItem value="done">Done</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         </div>
                                         <DialogFooter>
-                                            <Button variant="outline" onClick={() => setIsAddingProgress(false)}>Cancel</Button>
-                                            <Button onClick={handleAddProgress} disabled={submittingProgress}>
-                                                {submittingProgress ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Adding...</> : 'Commit Progress'}
+                                            <Button variant="outline" onClick={() => setIsAddingResource(false)}>Cancel</Button>
+                                            <Button onClick={handleAddResource} disabled={submittingResource}>
+                                                {submittingResource ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Adding...</> : 'Add Resource'}
                                             </Button>
                                         </DialogFooter>
                                     </DialogContent>
@@ -399,38 +498,76 @@ export default function LearningDetailPage() {
                             </div>
                         </div>
 
-                        {/* Progress Table */}
+                        {/* Resource Table */}
                         <div className="border rounded-lg rounded-t-none bg-card">
-                            {progressList.length === 0 ? (
+                            {resources.length === 0 ? (
                                 <div className="p-8 text-center text-muted-foreground">
-                                    No progress recorded yet. Start by adding an update!
+                                    No resources added yet.
                                 </div>
                             ) : (
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="w-[200px]">Update</TableHead>
-                                            <TableHead>Description</TableHead>
-                                            <TableHead className="w-[150px] text-right">Date</TableHead>
+                                            <TableHead className="w-[200px]">Title</TableHead>
+                                            <TableHead>Source</TableHead>
+                                            <TableHead>Link</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead className="w-[80px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {progressList.map((item) => (
+                                        {resources.map((item) => (
                                             <TableRow key={item.id}>
                                                 <TableCell className="font-medium">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="truncate">{item.title}</span>
-                                                    </div>
+                                                    {item.title}
                                                 </TableCell>
                                                 <TableCell className="text-muted-foreground">
-                                                    {item.description ? (
-                                                        <p className="line-clamp-2 text-sm">{item.description}</p>
-                                                    ) : (
-                                                        <span className="italic text-xs text-muted-foreground/50">No description</span>
-                                                    )}
+                                                    {item.source || '-'}
                                                 </TableCell>
-                                                <TableCell className="text-right text-xs text-muted-foreground">
-                                                    {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+                                                <TableCell>
+                                                    {item.link ? (
+                                                        <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-1">
+                                                            <LinkIcon className="h-3 w-3" /> Link
+                                                        </a>
+                                                    ) : '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant="outline" className={`capitalize ${item.status === 'done' ? 'bg-green-100 text-green-800' :
+                                                        item.status === 'learning' ? 'bg-blue-100 text-blue-800' :
+                                                            'bg-yellow-100 text-yellow-800'
+                                                        }`}>
+                                                        {item.status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => {
+                                                                setEditingResource(item);
+                                                                setEditResourceForm({
+                                                                    title: item.title,
+                                                                    source: item.source,
+                                                                    link: item.link,
+                                                                    status: item.status
+                                                                });
+                                                                setIsEditResourceOpen(true);
+                                                            }}>
+                                                                <Pencil className="mr-2 h-4 w-4" /> Edit
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem className="text-destructive" onClick={() => {
+                                                                setResourceToDelete(item);
+                                                                setIsDeleteResourceOpen(true);
+                                                            }}>
+                                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -570,6 +707,78 @@ export default function LearningDetailPage() {
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction onClick={handleDeleteLearning} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isDeleting}>
                                 {isDeleting ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Deleting...</> : 'Delete'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Edit Resource Dialog */}
+                <Dialog open={isEditResourceOpen} onOpenChange={setIsEditResourceOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Edit Resource</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label>Title</Label>
+                                <Input
+                                    value={editResourceForm.title}
+                                    onChange={(e) => setEditResourceForm({ ...editResourceForm, title: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Source</Label>
+                                <Input
+                                    value={editResourceForm.source}
+                                    onChange={(e) => setEditResourceForm({ ...editResourceForm, source: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Link</Label>
+                                <Input
+                                    value={editResourceForm.link}
+                                    onChange={(e) => setEditResourceForm({ ...editResourceForm, link: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Status</Label>
+                                <Select
+                                    value={editResourceForm.status}
+                                    onValueChange={(val) => setEditResourceForm({ ...editResourceForm, status: val as ResourceStatus })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="learning">Learning</SelectItem>
+                                        <SelectItem value="done">Done</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsEditResourceOpen(false)}>Cancel</Button>
+                            <Button onClick={handleUpdateResource} disabled={submittingResourceEdit}>
+                                {submittingResourceEdit ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Saving...</> : 'Save Changes'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Delete Resource Dialog */}
+                <AlertDialog open={isDeleteResourceOpen} onOpenChange={setIsDeleteResourceOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Resource</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to delete "{resourceToDelete?.title}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteResource} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isDeletingResource}>
+                                {isDeletingResource ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Deleting...</> : 'Delete'}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
