@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CategoryManager from '@/components/CategoryManager';
 import GoalManager from '@/components/GoalManager';
+import LearningManager from '@/components/LearningManager';
 import DashboardCharts from '@/components/DashboardCharts';
-import { Target, LayoutDashboard, ListTodo, FolderOpen, LogOut, User } from 'lucide-react';
+import { Target, LayoutDashboard, ListTodo, FolderOpen, LogOut, User, BookOpen } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -132,6 +133,18 @@ const DashboardContent: React.FC = () => {
                             Goals
                         </button>
                         <button
+                            onClick={() => setActiveTab('learning')}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all",
+                                activeTab === 'learning'
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                        >
+                            <BookOpen className="h-4 w-4" />
+                            Learning
+                        </button>
+                        <button
                             onClick={() => setActiveTab('categories')}
                             className={cn(
                                 "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all",
@@ -150,7 +163,7 @@ const DashboardContent: React.FC = () => {
             {/* Main Content */}
             <main className="container mx-auto px-4 py-6">
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full max-w-md grid-cols-3 mb-6 md:hidden">
+                    <TabsList className="grid w-full max-w-md grid-cols-4 mb-6 md:hidden">
                         <TabsTrigger value="dashboard" className="flex items-center gap-2">
                             <LayoutDashboard className="h-4 w-4" />
                             <span className="hidden sm:inline">Overview</span>
@@ -158,6 +171,10 @@ const DashboardContent: React.FC = () => {
                         <TabsTrigger value="goals" className="flex items-center gap-2">
                             <ListTodo className="h-4 w-4" />
                             <span className="hidden sm:inline">Goals</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="learning" className="flex items-center gap-2">
+                            <BookOpen className="h-4 w-4" />
+                            <span className="hidden sm:inline">Learning</span>
                         </TabsTrigger>
                         <TabsTrigger value="categories" className="flex items-center gap-2">
                             <FolderOpen className="h-4 w-4" />
@@ -175,6 +192,16 @@ const DashboardContent: React.FC = () => {
 
                     <TabsContent value="goals" className="animate-fade-in">
                         <GoalManager refreshTrigger={refreshTrigger} />
+                    </TabsContent>
+
+                    <TabsContent value="learning" className="animate-fade-in">
+                        <div className="w-full">
+                            <div className="mb-6">
+                                <h2 className="text-2xl font-bold text-foreground">Learning Path</h2>
+                                <p className="text-muted-foreground">Track what you want to learn</p>
+                            </div>
+                            <LearningManager refreshTrigger={refreshTrigger} />
+                        </div>
                     </TabsContent>
 
                     <TabsContent value="categories" className="animate-fade-in">

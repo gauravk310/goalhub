@@ -43,6 +43,29 @@ export interface GoalProgress {
   updatedAt: string;
 }
 
+export type LearningStatus = 'pending' | 'learning' | 'done';
+
+export interface Learning {
+  id: string;
+  userId: string;
+  categoryId: string;
+  title: string;
+  description: string;
+  status: LearningStatus;
+  dueDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LearningProgress {
+  id: string;
+  learningId: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuthSession {
   userId: string;
   email: string;
@@ -56,6 +79,12 @@ export interface GoalFilters {
   type?: GoalType;
   status?: GoalStatus;
   priority?: GoalPriority;
+  search?: string;
+}
+
+export interface LearningFilters {
+  categoryId?: string;
+  status?: LearningStatus;
   search?: string;
 }
 

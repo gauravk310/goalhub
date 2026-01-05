@@ -1,5 +1,5 @@
 
-import { User, Category, Goal, AuthSession, GoalProgress } from '@/types';
+import { User, Category, Goal, AuthSession, GoalProgress, Learning, LearningProgress } from '@/types';
 
 const STORAGE_KEYS = {
   SESSION: 'goaltracker_session',
@@ -140,6 +140,49 @@ export const deleteGoal = async (goalId: string): Promise<void> => {
 // Deprecated or Unused in new model
 export const initializeUserData = async (userId: string): Promise<void> => {
   // handled by backend on register
+};
+
+// Learning
+export const getLearnings = async (userId: string): Promise<Learning[]> => {
+  return await fetchWithAuth('/api/learnings');
+};
+
+export const createLearning = async (
+  userId: string,
+  categoryId: string,
+  title: string,
+  description: string,
+  status: Learning['status'],
+  dueDate?: string
+): Promise<Learning> => {
+  return await fetchWithAuth('/api/learnings', {
+    method: 'POST',
+    body: JSON.stringify({ userId, categoryId, title, description, status, dueDate }),
+  });
+};
+
+export const updateLearning = async (learningId: string, updates: Partial<Learning>): Promise<Learning> => {
+  return await fetchWithAuth(`/api/learnings/${learningId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  });
+};
+
+export const deleteLearning = async (learningId: string): Promise<void> => {
+  await fetchWithAuth(`/api/learnings/${learningId}`, {
+    method: 'DELETE',
+  });
+};
+
+export const getLearningProgress = async (learningId: string): Promise<LearningProgress[]> => {
+  return await fetchWithAuth(`/api/learnings/${learningId}/progress`);
+};
+
+export const createLearningProgress = async (learningId: string, title: string, description: string): Promise<LearningProgress> => {
+  return await fetchWithAuth(`/api/learnings/${learningId}/progress`, {
+    method: 'POST',
+    body: JSON.stringify({ title, description }),
+  });
 };
 
 
