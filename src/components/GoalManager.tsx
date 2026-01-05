@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Goal, Category, GoalFilters, GoalStatus, GoalPriority, GoalType } from '@/types';
 import { getGoals, getCategories, createGoal, updateGoal, deleteGoal } from '@/lib/dataService';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -257,6 +258,19 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
 
   return (
     <div className="space-y-6">
+      <Tabs
+        defaultValue="daily"
+        value={filters.type || 'daily'}
+        onValueChange={(v) => setFilters((prev) => ({ ...prev, type: v as GoalType }))}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsTrigger value="daily">Daily</TabsTrigger>
+          <TabsTrigger value="weekly">Weekly</TabsTrigger>
+          <TabsTrigger value="monthly">Monthly</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <div className="flex flex-col md:flex-row gap-4 p-2 bg-card rounded-lg border border-border">
         {/* Search */}
         <div className="relative flex-1">
@@ -291,20 +305,7 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
             </SelectContent>
           </Select>
 
-          <Select
-            value={filters.type || 'all'}
-            onValueChange={(v) => setFilters((prev) => ({ ...prev, type: v === 'all' ? undefined : (v as GoalType) }))}
-          >
-            <SelectTrigger className="w-[110px] h-10 bg-background">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Type Select Removed */}
 
           <Select
             value={filters.status || 'all'}
