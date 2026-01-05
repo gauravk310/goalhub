@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+
 import { Goal, Category, DashboardStats, GoalStatus, GoalPriority, GoalType, GoalProgress, GoalHistory } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -60,7 +60,7 @@ const TYPE_COLORS: Record<GoalType, string> = {
 };
 
 const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, progress, history }) => {
-  const router = useRouter();
+
 
   const dailyHistory = useMemo(() =>
     history.filter(h => h.period === 'daily')
@@ -236,11 +236,10 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, pr
               {stats.highPriorityGoals.map((goal) => (
                 <div
                   key={goal.id}
-                  onClick={() => router.push(`/goals/${goal.id}`)}
-                  className="flex items-center justify-between p-3 bg-destructive/10 border border-destructive/20 rounded-lg hover:bg-destructive/15 transition-colors cursor-pointer group h-full"
+                  className="flex items-center justify-between p-3 bg-destructive/10 border border-destructive/20 rounded-lg h-full"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate group-hover:text-destructive transition-colors">
+                    <p className="font-medium text-foreground truncate">
                       {goal.title}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
@@ -252,9 +251,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, pr
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <ArrowUpRight className="h-4 w-4 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
+
                 </div>
               ))}
             </div>
@@ -584,8 +581,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, pr
               {stats.recentActivity.map((goal) => (
                 <div
                   key={goal.id}
-                  onClick={() => router.push(`/goals/${goal.id}`)}
-                  className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg cursor-pointer hover:bg-secondary/70 transition-colors"
+                  className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground truncate">{goal.title}</p>
