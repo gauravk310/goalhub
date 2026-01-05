@@ -2,14 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { AuthSession } from '@/types';
-import { getSession, clearSession, authenticateUser, createUser, initializeUserData } from '@/lib/dataService';
+import { getSession, clearSession, authenticateUser, createUser, initializeUserData, logoutUser } from '@/lib/dataService';
 
 interface AuthContextType {
   session: AuthSession | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,8 +36,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSession(newSession);
   }, []);
 
-  const logout = useCallback(() => {
-    clearSession();
+  const logout = useCallback(async () => {
+    await logoutUser();
     setSession(null);
   }, []);
 

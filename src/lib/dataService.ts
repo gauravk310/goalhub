@@ -70,6 +70,7 @@ export const createUser = async (email: string, password: string, name: string):
   });
 };
 
+
 export const authenticateUser = async (email: string, password: string): Promise<AuthSession> => {
   const session = await fetchWithAuth('/api/auth/login', {
     method: 'POST',
@@ -78,6 +79,13 @@ export const authenticateUser = async (email: string, password: string): Promise
 
   setStorageItem(STORAGE_KEYS.SESSION, session);
   return session;
+};
+
+export const logoutUser = async (): Promise<void> => {
+  await fetchWithAuth('/api/auth/logout', {
+    method: 'POST',
+  });
+  clearSession();
 };
 
 // Categories
