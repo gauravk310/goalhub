@@ -236,6 +236,20 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
 
 
 
+  const handleStatusUpdate = async (goal: Goal, newStatus: GoalStatus) => {
+    try {
+      // Optimistic update
+      setGoals(goals.map(g => g.id === goal.id ? { ...g, status: newStatus } : g));
+
+      await updateGoal(goal.id, { status: newStatus });
+      toast.success(`Goal status updated`);
+      loadData();
+    } catch (error) {
+      toast.error('Failed to update status');
+      loadData();
+    }
+  };
+
   const handleDelete = async () => {
     if (selectedGoal) {
       try {
@@ -370,14 +384,12 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
             return (
               <div
                 key={goal.id}
-                className="p-4 bg-card rounded-lg border border-border hover:shadow-md transition-all animate-fade-in"
+                className="p-4 bg-card rounded-lg border border-border hover:shadow-md transition-all animate-fade-in group relative"
               >
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <Link href={`/goals/${goal.id}`} className="block min-w-0 flex-1 hover:underline">
-                        <h3 className="font-semibold text-foreground truncate">{goal.title}</h3>
-                      </Link>
+                      <h3 className="font-semibold text-foreground truncate">{goal.title}</h3>
                       {category && (
                         <Badge
                           variant="outline"
@@ -401,13 +413,62 @@ const GoalManager: React.FC<GoalManagerProps> = ({ refreshTrigger }) => {
                       <Badge variant="outline" className={PRIORITY_CONFIG[goal.priority].className}>
                         {PRIORITY_CONFIG[goal.priority].label}
                       </Badge>
-                      <Badge variant="outline" className={STATUS_CONFIG[goal.status].className}>
-                        {STATUS_CONFIG[goal.status].icon}
-                        <span className="ml-1">{STATUS_CONFIG[goal.status].label}</span>
-                      </Badge>
+
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Select
+                          value={goal.status}
+                          onValueChange={(value) => handleStatusUpdate(goal, value as GoalStatus)}
+                        >
+                          <SelectTrigger className={`h-7 w-auto text-xs px-2 gap-1 border-2 ${STATUS_CONFIG[goal.status].className}`}>
+                            <div className="flex items-center gap-1">
+                              {STATUS_CONFIG[goal.status].icon}
+                              <span>{STATUS_CONFIG[goal.status].label}</span>
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">
+                              <div className="flex items-center gap-2">
+                                <Circle className="h-3 w-3" /> <span>Pending</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="working">
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-3 w-3" /> <span>Working</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="done">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="h-3 w-3" /> <span>Done</span>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                     </div>
                   </div>
 
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute top-4 right-4 sm:static sm:opacity-100">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => handleOpenEdit(goal)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        setSelectedGoal(goal);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             );
