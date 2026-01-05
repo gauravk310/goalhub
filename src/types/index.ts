@@ -66,6 +66,20 @@ export interface LearningProgress {
   updatedAt: string;
 }
 
+export type HistoryPeriod = 'daily' | 'weekly' | 'monthly';
+
+export interface GoalHistory {
+  id: string;
+  userId: string;
+  date: string;
+  period: HistoryPeriod;
+  completedCount: number;
+  pendingCount: number;
+  totalCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuthSession {
   userId: string;
   email: string;

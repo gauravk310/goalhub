@@ -1,5 +1,5 @@
 
-import { User, Category, Goal, AuthSession, GoalProgress, Learning, LearningProgress } from '@/types';
+import { User, Category, Goal, AuthSession, GoalProgress, Learning, LearningProgress, GoalHistory } from '@/types';
 
 const STORAGE_KEYS = {
   SESSION: 'goaltracker_session',
@@ -192,3 +192,7 @@ export const getAllProgress = async (userId: string): Promise<GoalProgress[]> =>
   return await fetchWithAuth('/api/progress');
 };
 
+export const getGoalHistory = async (userId: string, period?: string): Promise<GoalHistory[]> => {
+  const url = period ? `/api/history?period=${period}` : '/api/history';
+  return await fetchWithAuth(url);
+};

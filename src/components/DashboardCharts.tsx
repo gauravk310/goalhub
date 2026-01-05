@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Goal, Category, DashboardStats, GoalStatus, GoalPriority, GoalType, GoalProgress } from '@/types';
+import { Goal, Category, DashboardStats, GoalStatus, GoalPriority, GoalType, GoalProgress, GoalHistory } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -38,6 +38,7 @@ interface DashboardChartsProps {
   goals: Goal[];
   categories: Category[];
   progress: GoalProgress[];
+  history: GoalHistory[];
 }
 
 const STATUS_COLORS: Record<GoalStatus, string> = {
@@ -58,8 +59,33 @@ const TYPE_COLORS: Record<GoalType, string> = {
   monthly: 'hsl(142, 71%, 45%)',
 };
 
-const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, progress }) => {
+const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, progress, history }) => {
   const router = useRouter();
+
+  const dailyHistory = useMemo(() =>
+    history.filter(h => h.period === 'daily')
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-7)
+      .map(h => ({ ...h, date: new Date(h.date).toLocaleDateString(undefined, { weekday: 'short' }) })),
+    [history]
+  );
+
+  const weeklyHistory = useMemo(() =>
+    history.filter(h => h.period === 'weekly')
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-4)
+      .map(h => ({ ...h, date: new Date(h.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) })),
+    [history]
+  );
+
+  const monthlyHistory = useMemo(() =>
+    history.filter(h => h.period === 'monthly')
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-6)
+      .map(h => ({ ...h, date: new Date(h.date).toLocaleDateString(undefined, { month: 'short' }) })),
+    [history]
+  );
+
   const stats = useMemo<DashboardStats>(() => {
     const statusDistribution: Record<GoalStatus, number> = {
       pending: 0,
@@ -349,6 +375,63 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ goals, categories, pr
                     animationDuration={1500}
                   />
                 </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* History Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-slide-up" style={{ animationDelay: '200ms' }}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Daily History (Last 7 Days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dailyHistory}>
+                  <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }} />
+                  <Bar dataKey="completedCount" name="Completed" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} stackId="a" />
+                  <Bar dataKey="pendingCount" name="Pending" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} stackId="a" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Weekly History (Last 4 Weeks)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyHistory}>
+                  <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }} />
+                  <Bar dataKey="completedCount" name="Completed" fill="hsl(199, 89%, 48%)" radius={[4, 4, 0, 0]} stackId="a" />
+                  <Bar dataKey="pendingCount" name="Pending" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} stackId="a" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Monthly History (Last 6 Months)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyHistory}>
+                  <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }} />
+                  <Bar dataKey="completedCount" name="Completed" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} stackId="a" />
+                  <Bar dataKey="pendingCount" name="Pending" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} stackId="a" />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
