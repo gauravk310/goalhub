@@ -1,5 +1,5 @@
 
-import { User, Category, Goal, AuthSession, GoalProgress, Learning, LearningProgress, GoalHistory } from '@/types';
+import { User, Category, Goal, AuthSession, GoalProgress, Learning, LearningProgress, GoalHistory, LongTermGoal } from '@/types';
 
 const STORAGE_KEYS = {
   SESSION: 'goaltracker_session',
@@ -195,4 +195,34 @@ export const getAllProgress = async (userId: string): Promise<GoalProgress[]> =>
 export const getGoalHistory = async (userId: string, period?: string): Promise<GoalHistory[]> => {
   const url = period ? `/api/history?period=${period}` : '/api/history';
   return await fetchWithAuth(url);
+};
+
+// Long Term Goals
+export const getLongTermGoals = async (userId: string): Promise<LongTermGoal[]> => {
+  return await fetchWithAuth('/api/long-term-goals');
+};
+
+export const createLongTermGoal = async (
+  userId: string,
+  title: string,
+  description: string,
+  status: string
+): Promise<LongTermGoal> => {
+  return await fetchWithAuth('/api/long-term-goals', {
+    method: 'POST',
+    body: JSON.stringify({ userId, title, description, status }),
+  });
+};
+
+export const updateLongTermGoal = async (goalId: string, updates: Partial<LongTermGoal>): Promise<LongTermGoal> => {
+  return await fetchWithAuth(`/api/long-term-goals/${goalId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  });
+};
+
+export const deleteLongTermGoal = async (goalId: string): Promise<void> => {
+  await fetchWithAuth(`/api/long-term-goals/${goalId}`, {
+    method: 'DELETE',
+  });
 };

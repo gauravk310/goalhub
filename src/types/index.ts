@@ -59,6 +59,15 @@ export interface Learning {
 
 export type ResourceStatus = 'pending' | 'learning' | 'done';
 
+export interface LearningProgress {
+  id: string;
+  learningId: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Resource {
   id: string;
   learningId: string;
@@ -118,4 +127,17 @@ export interface DashboardStats {
   yearlyChartData: { month: string; completed: number }[];
   totalCompletedThisYear: number;
   currentYear: number;
+}
+
+export type LongTermGoalStatus = 'incomplete' | 'complete';
+
+export interface LongTermGoal {
+  id: string;
+  userId: string;
+  title: string;
+  description?: string;
+  status: LongTermGoalStatus;
+  isCompleted: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
